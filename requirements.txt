@@ -1,8 +1,12 @@
 streamlit
-langchain
 chromadb
+langchain
 langchain-community
+langchain-classic
 langchain-google-genai
+langchain-groq
+langchain-text-splitters
 pypdf
 pandas
 python-dotenv
+sentence-transformers

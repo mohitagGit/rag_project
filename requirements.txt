@@ -9,4 +9,5 @@ langchain-text-splitters
 pypdf
 pandas
 python-dotenv
+protobuf<4.0.0
 sentence-transformers

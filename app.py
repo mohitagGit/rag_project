@@ -22,6 +22,14 @@ st.title("🤖 Varta RAG AI")
 st.markdown("Upload your secure documents and chat with our AI.")
 st.divider()
 
+# 1. Create a cached wrapper function
+@st.cache_resource(show_spinner="Booting AI Engine into RAM...")
+def get_cached_chain(session_id, provider):
+    return setup_rag_chain(
+        strict_mode=st.session_state.get("strict_mode", True),
+        provider=provider
+    )
+
 def stream_generator(text):
     for word in text.split(" "):
         yield word + " "
@@ -69,7 +77,7 @@ with st.sidebar:
     st.divider()
     st.header("⚙️ Settings")
 
-    # The LLM Provider Selector
+    # UI: The LLM Provider Selector
     selected_provider = st.sidebar.selectbox(
         "🧠 Select AI Provider",
         ["Groq (Llama 3.1 8B)", "Google (Gemini 2.5 Flash)"]
@@ -85,7 +93,7 @@ with st.sidebar:
                 provider=selected_provider
             )
 
-    # The Strict Mode Toggle
+    # UI: The Strict Mode Toggle
     is_strict = st.toggle(
         "🔒 Strict Document Mode", 
         value=st.session_state.strict_mode,
@@ -104,7 +112,7 @@ with st.sidebar:
     st.header("⚙️ Data Privacy")
     st.write("Your data is processed locally and never leaves your machine.")
 
-    # The Deletion Button
+    # UI: The Deletion Button
     if st.sidebar.button("🗑️ Delete My Data"):
         with st.spinner("Erasing database..."):
             
@@ -139,13 +147,22 @@ with st.sidebar:
             
             st.sidebar.success("✅ Database and chat history completely wiped.")
 
+    # 2. Call the cached version instead!
+    if "chain" not in st.session_state or st.session_state.current_provider != selected_provider:
+        st.session_state.current_provider = selected_provider
+
+        # This will be slow the FIRST time, but instant every time after that.
+        st.session_state.chain = get_cached_chain(
+            provider=selected_provider
+        )
+
 # --- MAIN CHAT INTERFACE ---
-# 1. Display past chat messages from history
+# 1. UI: Display past chat messages from history
 for message in st.session_state.messages:
     with st.chat_message(message["role"]):
         st.markdown(message["content"])
 
-# 2. Chat Input Box
+# 2. UI: Chat Input Box
 if prompt := st.chat_input("Ask a question about your documents..."):
     # Immediately display the user's question on the screen
     st.session_state.messages.append({"role": "user", "content": prompt})
